@@ -1,0 +1,16 @@
+[
+{
+  "modid": "mod_ToastNotificationBridge",
+  "name": "Toast Notification Bridge Mod",
+  "description": "Toast Notification Bridge Mod.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["mntone"],
+  "credits": "Toast Notification Bridge Mod",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
