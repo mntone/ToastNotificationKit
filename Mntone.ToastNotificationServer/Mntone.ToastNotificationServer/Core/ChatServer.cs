@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Mntone.ToastNotificationServer.Core
 {
-	public sealed class ChatSocketServer
+	public sealed class ChatServer
 	{
 		public const int DEFAULT_SERVER_PORT = 4123;
 
@@ -18,7 +18,7 @@ namespace Mntone.ToastNotificationServer.Core
 		private Thread _connectionThread = null;
 		private int _enabled = 0;
 
-		public ChatSocketServer()
+		public ChatServer()
 		{
 			var endPointHost = new IPEndPoint(IPAddress.Loopback, DEFAULT_SERVER_PORT);
 			this._socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);

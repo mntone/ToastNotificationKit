@@ -1,6 +1,8 @@
 package com.mntone.toastnotificationbridgemod;
 
+import net.minecraft.client.resources.IResource;
 import net.minecraft.util.IChatComponent;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
@@ -8,25 +10,32 @@ import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLModDisabledEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent;
+
+import org.apache.commons.codec.binary.Base64;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 @Mod(
 	modid = ToastNotificationBridgeMod.ID,
 	name = ToastNotificationBridgeMod.NAME,
 	version = ToastNotificationBridgeMod.VERSION,
 	canBeDeactivated = true)
-public class ToastNotificationBridgeMod
+public final class ToastNotificationBridgeMod
 {
 	public static final String ID = "mod_ToastNotificationBridge";
 	public static final String NAME = "Toast Notification Bridge Mod";
 	public static final String VERSION = "0.8";
 
-	private ChatSocketClient _client = null;
+	private ChatClient _client = null;
 
 	@EventHandler
 	public void init(final FMLInitializationEvent event)
 	{
-		MinecraftForge.EVENT_BUS.register(new ForgeListener(this));
-		this._client = new ChatSocketClient();
+		MinecraftForge.EVENT_BUS.register(this);
+		this._client = new ChatClient();
 	}
 
 	@EventHandler
@@ -35,34 +44,63 @@ public class ToastNotificationBridgeMod
 		this._client.close();
 	}
 
-	public static class ForgeListener
+	@SubscribeEvent
+	public void onClientChatReceivedEvent(final ClientChatReceivedEvent event)
 	{
-		private ToastNotificationBridgeMod _that;
-
-		public ForgeListener(ToastNotificationBridgeMod that)
+		final IChatComponent message = event.message;
+		if (message == null)
 		{
-			this._that = that;
+			return;
 		}
 
-		@SubscribeEvent
-		public void onClientChatReceivedEvent(final ClientChatReceivedEvent event)
+		final String messageText = event.message.getUnformattedText();
+		if (!messageText.contains(">"))
 		{
-			final IChatComponent message = event.message;
-			if (message == null)
-			{
-				return;
-			}
+			this._client.send("{\"player_name\":\"SYSTEM\",\"text\":\"/" + messageText + "\"}");
 
-			final String messageText = event.message.getUnformattedText();
-			if (!messageText.contains(">"))
-			{
-				return;
-			}
-
-			final String playerName = messageText.substring(1, messageText.indexOf('>'));
-			final String messageBody = messageText.substring(messageText.indexOf('>') + 2);
-			final String jsonText = "{\"player_name\":\"" + playerName + "\",\"text\":\"" + messageBody + "\"}";
-			this._that._client.send(jsonText);
+			return;
 		}
+
+		final String playerName = messageText.substring(1, messageText.indexOf('>'));
+		final String messageBody = messageText.substring(messageText.indexOf('>') + 2);
+		final ResourceLocation skinLocation = MinecraftHelper.getPlayerSkin(playerName);
+
+		byte[] skinData = null;
+		try
+		{
+			final IResource skinResource = MinecraftHelper.getResource(skinLocation);
+			try (final InputStream stream = skinResource.getInputStream())
+			{
+				final ByteArrayOutputStream bout = new ByteArrayOutputStream();
+				byte[] buffer = new byte[4096];
+				while (true)
+				{
+					int length = stream.read(buffer);
+					if (length < 0)
+					{
+						break;
+					}
+					bout.write(buffer, 0, length);
+				}
+				skinData = bout.toByteArray();
+			}
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+
+		final String jsonText = String.format(
+			"{\"player_name\":\"%s\",\"text\":\"%s\",\"skin_data\":\"%s\"}",
+			playerName,
+			messageBody,
+			Base64.encodeBase64String(skinData));
+		this._client.send(jsonText);
+	}
+
+	@SubscribeEvent
+	public void onPlayerLoggedInEvent(final PlayerEvent.PlayerLoggedInEvent event)
+	{
+		event.player.getName();
 	}
 }

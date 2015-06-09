@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -13,7 +14,7 @@ namespace Mntone.ToastNotificationServer.Core
 		private Thread _connectionThread = null;
 		private int _enabled = 0;
 
-		public ChatClientContext(ChatSocketServer parent, Socket clientSocket)
+		public ChatClientContext(ChatServer parent, Socket clientSocket)
 		{
 			this.Parent = parent;
 			this._clientSocket = clientSocket;
@@ -32,24 +33,20 @@ namespace Mntone.ToastNotificationServer.Core
 			{
 				try
 				{
-					while (true)
+					using (var stream = new NetworkStream(this._clientSocket))
+					using (var reader = new StreamReader(stream))
 					{
-						if (Interlocked.CompareExchange(ref this._enabled, 0, 0) == 0)
+						while (true)
 						{
-							// expect to shutdown...
-							break;
+							if (Interlocked.CompareExchange(ref this._enabled, 0, 0) == 0)
+							{
+								// expect to shutdown...
+								break;
+							}
+
+							var text = reader.ReadLine();
+							this.RaiseMessageReceived(text);
 						}
-
-						byte[] data = new byte[4096];
-
-						var length = this._clientSocket.Receive(data, SocketFlags.None);
-						if (length == 0)
-						{
-							continue;
-						}
-
-						var text = Encoding.UTF8.GetString(data, 0, length);
-						this.RaiseMessageReceived(text);
 					}
 				}
 				catch (Exception)
@@ -102,6 +99,6 @@ namespace Mntone.ToastNotificationServer.Core
 			Interlocked.CompareExchange(ref this.ClientClosed, null, null)?.Invoke(this, ClosedEventArgs.Empty);
 		}
 
-		public ChatSocketServer Parent { get; }
+		public ChatServer Parent { get; }
 	}
 }

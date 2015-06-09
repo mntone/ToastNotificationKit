@@ -25,6 +25,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <UseVSHostingProcess>false</UseVSHostingProcess>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -36,6 +37,7 @@
     <WarningLevel>4</WarningLevel>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -76,7 +78,7 @@
     </Compile>
     <Compile Include="Core\AppContext.cs" />
     <Compile Include="Core\ChatClientContext.cs" />
-    <Compile Include="Core\ChatSocketServer.cs" />
+    <Compile Include="Core\ChatServer.cs" />
     <Compile Include="Core\ClientConnectedEventArgs.cs" />
     <Compile Include="Core\ClientConnectedEventHandler.cs" />
     <Compile Include="Core\MessageReceivedEventArgs.cs" />
@@ -84,6 +86,7 @@
     <Compile Include="Core\ServerClosedEventArgs.cs" />
     <Compile Include="Core\ServerClosedEventHandler.cs" />
     <Compile Include="Data\ChatMessage.cs" />
+    <Compile Include="Frameworks\ImageHelper.cs" />
     <Compile Include="Frameworks\JsonSerializerExtensions.cs" />
     <Compile Include="Frameworks\ShellExtensions.cs" />
     <Compile Include="Frameworks\ShellLinkPlus.cs" />

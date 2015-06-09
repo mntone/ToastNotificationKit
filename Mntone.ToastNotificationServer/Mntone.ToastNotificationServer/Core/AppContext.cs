@@ -1,7 +1,12 @@
 ﻿using Mntone.ToastNotificationServer.Data;
 using Mntone.ToastNotificationServer.Frameworks;
+using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Media.Imaging;
+using Windows.Data.Xml.Dom;
 using Windows.UI.Notifications;
 
 namespace Mntone.ToastNotificationServer.Core
@@ -11,7 +16,7 @@ namespace Mntone.ToastNotificationServer.Core
 		public const string APP_IDENTIFER = "CHARM_NOTIFICATION";
 
 		private static ToastNotifier _notifier = null;
-		private static ChatSocketServer _server = null;
+		private static ChatServer _server = null;
 		private static bool _enabled = false;
 
 		static AppContext()
@@ -27,7 +32,7 @@ namespace Mntone.ToastNotificationServer.Core
 			var server = Interlocked.CompareExchange(ref _server, null, null);
 			if (server == null)
 			{
-				_server = new ChatSocketServer();
+				_server = new ChatServer();
 				_server.ClientConnected += (sender, e) =>
 				{
 					var ctx = e.Context;
@@ -40,7 +45,7 @@ namespace Mntone.ToastNotificationServer.Core
 						Start();
 					}
 				};
-                _server.Start();
+				_server.Start();
 			}
 		}
 
@@ -57,11 +62,49 @@ namespace Mntone.ToastNotificationServer.Core
 
 		private static void NotifyToast(ChatMessage message)
 		{
-			var toastXml = ToastNotificationManager.GetTemplateContent(ToastTemplateType.ToastText02);
-			var textNodes = toastXml.GetElementsByTagName("text");
-			textNodes[0].AppendChild(toastXml.CreateTextNode(string.Format("{0} さんが発言しました", message.PlayerName)));
-			textNodes[1].AppendChild(toastXml.CreateTextNode(message.Text));
-			_notifier.Show(new ToastNotification(toastXml));
+			if (!string.IsNullOrEmpty(message.SkinData))
+			{
+				var targetSize = (int)(1.8F /* TODO: guess */ * 90);
+				var filedir = Path.Combine(Path.GetTempPath(), "Mntone.ToastNotificationServer");
+				var filepath = Path.Combine(filedir, string.Format("{0}_{1}.png", message.PlayerName, targetSize));
+				if (!Directory.Exists(filedir))
+				{
+					Directory.CreateDirectory(filedir);
+				}
+				if (!File.Exists(filepath))
+				{
+					var data = Convert.FromBase64String(message.SkinData);
+					using (var ms = new MemoryStream(data))
+					{
+						var decoder = PngBitmapDecoder.Create(ms, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+						var bitmap = ImageHelper.CropAndResize(decoder.Frames[0], new Rect(8, 8, 8, 8), new Size(targetSize, targetSize));
+						var encoder = new PngBitmapEncoder();
+						encoder.Frames.Add(BitmapFrame.Create(bitmap));
+
+						using (var stream = File.Create(filepath))
+						{
+							encoder.Save(stream);
+						}
+					}
+				}
+
+				var toastXml = ToastNotificationManager.GetTemplateContent(ToastTemplateType.ToastImageAndText02);
+				var textNodes = toastXml.GetElementsByTagName("text");
+				textNodes[0].AppendChild(toastXml.CreateTextNode(string.Format("{0} さんが発言しました", message.PlayerName)));
+				textNodes[1].AppendChild(toastXml.CreateTextNode(message.Text));
+				var toastImage = (XmlElement)toastXml.GetElementsByTagName("image")[0];
+				toastImage.SetAttribute("src", string.Format("file:///{0}", filepath));
+				toastImage.SetAttribute("alt", "Skin Icon");
+				_notifier.Show(new ToastNotification(toastXml));
+			}
+			else
+			{
+				var toastXml = ToastNotificationManager.GetTemplateContent(ToastTemplateType.ToastText02);
+				var textNodes = toastXml.GetElementsByTagName("text");
+				textNodes[0].AppendChild(toastXml.CreateTextNode(string.Format("{0} さんが発言しました", message.PlayerName)));
+				textNodes[1].AppendChild(toastXml.CreateTextNode(message.Text));
+				_notifier.Show(new ToastNotification(toastXml));
+			}
 		}
 	}
 }

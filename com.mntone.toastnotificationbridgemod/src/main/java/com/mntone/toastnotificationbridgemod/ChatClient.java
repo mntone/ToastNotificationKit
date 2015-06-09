@@ -10,7 +10,7 @@ import java.nio.charset.Charset;
 
 import javax.annotation.Nonnull;
 
-public class ChatSocketClient
+public final class ChatClient
 {
 	public static final int DEFAULT_SERVER_PORT = 4123;
 
@@ -22,7 +22,7 @@ public class ChatSocketClient
 	private Socket _socket = null;
 	private OutputStreamWriter _writer = null;
 
-	public ChatSocketClient()
+	public ChatClient()
 	{
 	}
 
@@ -79,7 +79,7 @@ public class ChatSocketClient
 		{
 			try
 			{
-				this._writer.write(jsonText);
+				this._writer.write(jsonText + "\r\n");
 				this._writer.flush();
 			}
 			catch (final SocketException e)
