@@ -33,17 +33,14 @@ namespace Mntone.ToastNotificationServer.Frameworks
 			destination.Lock();
 			unsafe
 			{
-				byte* src = (byte*)source.BackBuffer;
-				byte* ptr = (byte*)destination.BackBuffer;
+				var src = (int*)source.BackBuffer;
+				var ptr = (int*)destination.BackBuffer;
 				for (var i = 0; i < resultHeight; ++i)
 				{
 					for (var j = 0; j < resultWidth; ++j)
 					{
-						byte* srcPixel = src + sourceStride * (sourceY + (int)(i * hr)) + 4 * (sourceX + (int)(j * wr));
-						*ptr++ = srcPixel[0];
-						*ptr++ = srcPixel[1];
-						*ptr++ = srcPixel[2];
-						*ptr++ = srcPixel[3];
+						var srcPixel = src + sourceWidth * (sourceY + (int)(i * hr)) + (sourceX + (int)(j * wr));
+						*ptr++ = *srcPixel;
 					}
 				}
 			}
