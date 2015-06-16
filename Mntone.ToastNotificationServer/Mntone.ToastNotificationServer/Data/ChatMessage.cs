@@ -12,10 +12,10 @@ namespace Mntone.ToastNotificationServer.Data
 			this.SkinData = skinData;
 		}
 
-		[DataMember(Name = "player_name")]
+		[DataMember(Name = "player_name", IsRequired = true)]
 		public string PlayerName { get; private set; }
 
-		[DataMember(Name = "text")]
+		[DataMember(Name = "text", IsRequired = true)]
 		public string Text { get; private set; }
 
 		[DataMember(Name = "skin_data")]

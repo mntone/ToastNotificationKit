@@ -1,5 +1,7 @@
 package com.mntone.toastnotificationbridgemod;
 
+import com.mntone.toastnotificationbridgemod.data.ChatMessage;
+
 import net.minecraft.client.resources.IResource;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.ResourceLocation;
@@ -56,7 +58,8 @@ public final class ToastNotificationBridgeMod
 		final String messageText = event.message.getUnformattedText();
 		if (!messageText.contains(">"))
 		{
-			this._client.send("{\"player_name\":\"SYSTEM\",\"text\":\"/" + messageText + "\"}");
+			final ChatMessage chatMessage = new ChatMessage("SYSTEM", "/" + messageText);
+			this._client.send(chatMessage);
 
 			return;
 		}
@@ -90,12 +93,8 @@ public final class ToastNotificationBridgeMod
 			e.printStackTrace();
 		}
 
-		final String jsonText = String.format(
-			"{\"player_name\":\"%s\",\"text\":\"%s\",\"skin_data\":\"%s\"}",
-			playerName,
-			messageBody,
-			Base64.encodeBase64String(skinData));
-		this._client.send(jsonText);
+		final ChatMessage chatMessage = new ChatMessage(playerName, messageBody, Base64.encodeBase64String(skinData));
+		this._client.send(chatMessage);
 	}
 
 	@SubscribeEvent

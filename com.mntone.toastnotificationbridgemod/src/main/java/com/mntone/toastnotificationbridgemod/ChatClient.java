@@ -1,5 +1,8 @@
 package com.mntone.toastnotificationbridgemod;
 
+import com.google.gson.Gson;
+import com.mntone.toastnotificationbridgemod.data.ChatMessage;
+
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.InetAddress;
@@ -16,6 +19,8 @@ public final class ChatClient
 
 	private static final int RETRY_COUNT = 3;
 	private static final Charset CONNECTION_CHARSET = Charset.forName("UTF-8");
+
+	private static Gson _gsonStatic = new Gson();
 
 	private boolean _enabled = false;
 	private int _port = DEFAULT_SERVER_PORT;
@@ -68,8 +73,9 @@ public final class ChatClient
 		}
 	}
 
-	public void send(@Nonnull final String jsonText)
+	public void send(@Nonnull final ChatMessage message)
 	{
+		final String jsonText = _gsonStatic.toJson(message);
 		this.sendPrivate(jsonText, RETRY_COUNT);
 	}
 
